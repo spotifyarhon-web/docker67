@@ -1,0 +1,30 @@
+$ curl http://127.0.0.1:8080/
+{"greeting": "sadokfdoosdf", "count": 0, "hostname": "f84da62b783f", "storage": "sqlite"}
+$ curl --max-time 5 -fsS -X POST http://127.0.0.1:8080/increment
+{"greeting": "sadokfdoosdf", "count": 1, "hostname": "f84da62b783f", "storage": "sqlite"}
+$ curl --max-time 5 -fsS -X POST http://127.0.0.1:8080/increment
+{"greeting": "sadokfdoosdf", "count": 2, "hostname": "f84da62b783f", "storage": "sqlite"}
+$ curl --max-time 5 -fsS -X POST http://127.0.0.1:8080/increment
+{"greeting": "sadokfdoosdf", "count": 3, "hostname": "f84da62b783f", "storage": "sqlite"}
+$ docker compose down
+Container docker67-app-1 Stopping 
+ Container docker67-app-1 Stopped 
+ Container docker67-app-1 Removing 
+ Container docker67-app-1 Removed 
+ Network docker67_default Removing 
+ Network docker67_default Removed
+$ docker compose up -d
+Network docker67_default Creating 
+ Network docker67_default Creating 
+ Network docker67_default Created 
+ Network docker67_default Created 
+ Container docker67-app-1 Creating 
+ Container docker67-app-1 Created 
+ Container docker67-app-1 Starting 
+ Container docker67-app-1 Started
+$ curl http://127.0.0.1:8080/
+{"greeting": "sadokfdoosdf", "count": 3, "hostname": "2550907d2df1", "storage": "sqlite"}
+$ docker compose logs --no-color app
+app-1  | 2026-11-10 17:22:38,938 listening port=8000 storage=sqlite
+app-1  | 2026-11-10 17:22:39,959 http 172.18.0.1 "GET / HTTP/1.1" 200 -
+PASS: count 0 -> 3; after down/up: 3. Container recreated, volume retained.
