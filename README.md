@@ -18,7 +18,8 @@ curl -X POST http://localhost:8080/increment
 docker compose logs app
 ```
 
-SQLite хранится в именованном volume `counter_data`, подключённом к `/data`.
+Compose запускает приложение и Redis. Порт Redis доступен внутри сети Compose.
+Redis записывает данные в именованный volume `redis_data`, подключённый к `/data`.
 Проверка сохранения:
 
 ```sh
@@ -29,5 +30,20 @@ curl http://localhost:8080/
 
 Счётчик должен сохранить значение. `docker compose down -v` удаляет volume
 и данные, поэтому для этой проверки его использовать нельзя.
+
+Проверка недоступности Redis:
+
+```sh
+docker compose stop redis
+curl -i http://localhost:8080/healthz
+curl -i http://localhost:8080/readyz
+curl -i -X POST http://localhost:8080/increment
+docker compose start redis
+```
+
+При остановленном Redis `/healthz` возвращает 200, а `/readyz` и
+`POST /increment` возвращают 503. После запуска Redis дождитесь, пока
+`/readyz` снова вернёт 200. Затем `GET /` покажет сохранённое значение,
+а следующий POST увеличит его на 1.
 
 Результаты проверки — в `report.txt`.

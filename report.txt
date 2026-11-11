@@ -28,3 +28,35 @@ $ docker compose logs --no-color app
 app-1  | 2026-11-10 17:22:38,938 listening port=8000 storage=sqlite
 app-1  | 2026-11-10 17:22:39,959 http 172.18.0.1 "GET / HTTP/1.1" 200 -
 PASS: count 0 -> 3; after down/up: 3. Container recreated, volume retained.
+
+Уровень 8 — Redis
+$ docker compose up -d --build --wait --wait-timeout 60
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 0, "hostname": "562bd9772aa7", "storage": "redis"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X POST http://127.0.0.1:8080/increment
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 1, "hostname": "562bd9772aa7", "storage": "redis"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X POST http://127.0.0.1:8080/increment
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 2, "hostname": "562bd9772aa7", "storage": "redis"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X POST http://127.0.0.1:8080/increment
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 3, "hostname": "562bd9772aa7", "storage": "redis"}
+$ docker compose down
+$ docker compose up -d --wait --wait-timeout 60
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 3, "hostname": "19ba37b59216", "storage": "redis"}
+$ docker compose ps -q app
+$ docker compose stop redis
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/healthz
+HTTP 200 {"status": "alive"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/readyz
+HTTP 503 {"error": "storage_unavailable"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X POST http://127.0.0.1:8080/increment
+HTTP 503 {"error": "storage_unavailable"}
+$ docker compose start --wait --wait-timeout 60 redis
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/readyz
+HTTP 200 {"status": "ready", "storage": "redis"}
+$ docker compose ps -q app
+$ curl --max-time 8 -sS -w \n%{http_code} -X GET http://127.0.0.1:8080/
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 3, "hostname": "19ba37b59216", "storage": "redis"}
+$ curl --max-time 8 -sS -w \n%{http_code} -X POST http://127.0.0.1:8080/increment
+HTTP 200 {"greeting": "sadokfdoosdf", "count": 4, "hostname": "19ba37b59216", "storage": "redis"}
+PASS: после down/up сохранилось 3; после запуска Redis без перезапуска app счётчик вырос до 4.
